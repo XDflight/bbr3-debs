@@ -1,0 +1,77 @@
+name: Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  build:
+    name: ${{ matrix.branch }}_${{ matrix.arch }}
+    runs-on: ${{ (matrix.arch == 'amd64' || matrix.arch == 'i386') && 'ubuntu-latest' || 'ubuntu-22.04-arm' }}
+    strategy:
+      matrix: 
+        branch: ["v3"]
+        arch: ["amd64", "arm64"]
+        
+    steps:
+      - name: "swap"
+        uses: thejerrybao/setup-swap-space@v1
+        with:
+          swap-space-path: /swapfile
+          swap-size-gb: 2
+          remove-existing-swap-files: true
+      
+      - name: "env"
+        run: |
+          echo -e "DATE=$(date --rfc-3339=date)" >> ${GITHUB_ENV}
+          if [[ "${{ matrix.arch }}" == "amd64" ]]; then
+            echo -e "MAKE_ENV=" >> ${GITHUB_ENV}
+          fi
+          if [[ "${{ matrix.arch }}" == "i386" ]]; then
+            echo -e "MAKE_ENV=ARCH=i386 CROSS_COMPILE=i686-linux-gnu-" >> ${GITHUB_ENV}
+          fi
+          if [[ "${{ matrix.arch }}" == "arm64" ]]; then
+            echo -e "MAKE_ENV=" >> ${GITHUB_ENV}
+          fi
+          if [[ "${{ matrix.arch }}" == "armhf" ]]; then
+            echo -e "MAKE_ENV=ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- KBUILD_DEBARCH=armhf" >> ${GITHUB_ENV}
+          fi
+      
+      - name: "checkout"
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.branch }}
+
+      - name: "dependencies"
+        run: |
+          sudo dpkg --add-architecture ${{ matrix.arch }}
+          sudo apt-get update
+          sudo apt-get install build-essential debhelper-compat=12 libelf-dev bc
+          sudo apt-get install crossbuild-essential-${{ matrix.arch }}
+          sudo apt-get install libssl-dev:${{ matrix.arch }}
+
+      - name: "free"
+        run: |
+          sudo apt-get clean
+          sudo apt-get autoremove
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          df -h
+        
+      - name: "configure"
+        run: |
+          make ${{ env.MAKE_ENV }} olddefconfig
+
+      - name: "make"
+        run: |
+          make ${{ env.MAKE_ENV }} -j$(nproc) bindeb-pkg LOCALVERSION=-bbr3 KDEB_PKGVERSION=${{ env.DATE }}
+      
+      - name: "release"
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: ../linux-*.deb
+          target_commitish: ${{ matrix.branch }}
+          tag_name: bbr3_${{ env.DATE }}_${{ matrix.branch }}_${{ matrix.arch }}
+          fail_on_unmatched_files: true
+          generate_release_notes: false
+          append_body: true
