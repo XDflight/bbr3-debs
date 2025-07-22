@@ -1,73 +1,61 @@
-This open source distribution contains documentation, scripts, and
-other materials related to the BBR congestion control algorithm.
+# Latest Linux kernels merged with Google BBR v3
 
-Quick links
----
+### What is BBR? Why does this repo exist?
+You can find the research papers about BBR [here (2016)](https://research.google/pubs/bbr-congestion-based-congestion-control-2/) and [here (2017)](https://dl.acm.org/doi/10.1145/3009824). 
+For simple explanation, [this article (2017)](https://cloud.google.com/blog/products/networking/tcp-bbr-congestion-control-comes-to-gcp-your-internet-just-got-faster) written by the development team of Google BBR is a good introduction.
+Basically, BBR aims to improve network performance by considering both bandwidth and round-trip time (RTT) to optimize data transmission.
+BBR v1 was already merged into the Linux kernel in `4.9`.
+BBR v3 is an improved version of the BBR v1, with the primary goal of addressing issues related to unfairness and high retransmission rates.
+However, BBR v3 has not yet merged into the kernel.
+The current Linux kernel used in `google/bbr` is `6.13.7`. 
+This repo intends to rebase all the commits made by the BBR development team onto the kernel source tree, so that people can use BBR v3 in newer Linux kernels (especially the latest stable & LTS versions).
+For convenience, GitHub workflows have been setup to compile those "modded" kernels into `.deb` packages and release them on GitHub, so that Debian/Ubuntu users can install the kernels easily.
 
-* Linux TCP BBRv3 Release:
-  * https://github.com/google/bbr/blob/v3/README.md
-* BBR FAQ:
-  * https://github.com/google/bbr/blob/master/Documentation/bbr-faq.md
-* TCP BBR Quick-Start: Building and Running TCP BBR on Google Compute Engine:
-  * https://github.com/google/bbr/blob/master/Documentation/bbr-quick-start.md
-* Mailing list: Test results, performance evaluations, feedback, and BBR-related discussions are very welcome in the public e-mail list for BBR: https://groups.google.com/d/forum/bbr-dev
+### Compilation Highlights
+- Four TCP congestion control algorithms are available: `bbr` (Google BBR3), `dctcp`, `cubic`, and `reno`. `bbr` is the default and is built-in, `dctcp` and `cubic` were compiled as modules, and `reno` is built-in because it is the "original" one that comes with the Linux kernel. In general, `bbr` is recommended for general purposes (especially high bandwidth and variable/high latency environments), while `dctcp` is recommended for low latency environments such as data centers; `cubic` and `reno` are included mainly for debugging and testing purposes (more information about them can be found online). Because `bbr` is the default algorithm, there is no need to set `net.ipv4.tcp_congestion_control = bbr` in `sysctl.d`.
+- Two TCP active queue management algorithms are available: `fifo` and `fq_codel`. If you are not familiar with them, using the default one (`fq_codel`) will work in almost every scenarios. `fifo`, as its name suggests, is a very simple AQM algorithm that comes with the kernel originally, while `fq_codel` is configured as the default because it performs well with BBR, does not require careful parameter tuning, and is very robust in all network environments.
+- Other configurations are basically inherited from the "currently latest" (likely not the case when you read this `README`) official Debian kernel `6.1.0-35-amd64` (which is based on Linux kernel `6.1.137`), with minors changes to adapt the configurations to newer kernels. The only two things worth highlighting are:
+    1. Kernel debug information is omitted because it is too big to upload to and download from GitHub and generally not useful if one does not do kernel development. Don't worry, many distros also omit kernel debug info in their standard install and offer them as a standalone package. 
+    1. Transparent Hugepage Support (THP) is disabled in the kernels by default since it is recommended by many database systems (and I think may people will install these kernels on servers). Anyway, you can always change the setting yourself at `/sys/kernel/mm/transparent_hugepage/`.
 
-Latest BBR code from Google's BBR team
----
+### Download
+Very simple. 
+On the [GitHub Releases](https://github.com/XDflight/bbr3-debs/releases) page, you can find all the compiled kernels packaged into `.deb` files. 
+Simply choose a version you'd like to use. 
+Every release will come with a brief explanation of the kernel version to help you decide which version you'd like to use. 
 
-* For Linux TCP BBR:
-  * https://github.com/google/bbr/blob/v3/net/ipv4/tcp_bbr.c
+Generally, look for any of the following versions:
+- **For best compatibility & less headache:** Choose the latest kernel that has the same (or close to the) major version (first two numbers) as your current kernel. You can check the version of your kernel using `uname -a`.
+- **For best stability & security:** Choose the latest LTS kernel.
+- **For most features & best support for new hardware:** Choose the latest kernel.
 
-* For QUIC BBR:
-  * https://github.com/google/quiche/blob/main/quiche/quic/core/congestion_control/bbr2_sender.cc
-  * https://github.com/google/quiche/blob/main/quiche/quic/core/congestion_control/bbr2_sender.h
+In any case, please choose a kernel version that's higher/newer than your current kernel version, because many bootloaders (such as GRUB) will boot to the newest kernel by default. 
 
-BBR v1 releases
----
+As for the architecture (`amd64`, `arm64`, ...), just choose the one used by your system.
 
-* For Linux TCP BBR:
-  * https://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next.git/tree/net/ipv4/tcp_bbr.c
+Please download all three packages in the release, namely the following:
+- `linux-headers-*`: The header files of the kernel. Those will be useful to build external kernel modules.
+- `linux-image-*`: The kernel binary - the most important one.
+- `linux-libc-dev-*`: The standard C library `libc` and other user-space stuff critical for things to work.
 
-* For QUIC BBR:
-  * https://github.com/google/quiche/blob/main/quiche/quic/core/congestion_control/bbr_sender.cc
-  * https://github.com/google/quiche/blob/main/quiche/quic/core/congestion_control/bbr_sender.h
-
-BBR Internet Draft
----
-* There is an Internet Draft specifying BBR:  
-  * BBR is a Congestion Control Working Group (CCWG) "working group item"  
-  * Target: publish an experimental RFC documenting the algorithm  
-  * IETF working group members are collaborating on github  
-    * [https://github.com/ietf-wg-ccwg/draft-ietf-ccwg-bbr](https://github.com/ietf-wg-ccwg/draft-ietf-ccwg-bbr)  
-    * Ideas or suggestions? Feel free to file a github issue.  
-    * Specific editorial suggestions? Feel free to propose a pull request.  
-  * BBR Internet Draft:  draft-ietf-ccwg-bbr  
-    * [https://datatracker.ietf.org/doc/draft-ietf-ccwg-bbr/](https://datatracker.ietf.org/doc/draft-ietf-ccwg-bbr/)  
-
-Information About BBR
----
-* There is a [blog post](https://cloudplatform.googleblog.com/2017/07/TCP-BBR-congestion-control-comes-to-GCP-your-Internet-just-got-faster.html) on the launch of BBR for Google.com, YouTube, and Google Cloud Platform  
-* There is an [article describing BBR](http://cacm.acm.org/magazines/2017/2/212428-bbr-congestion-based-congestion-control/fulltext) in the February 2017 issue of CACM (the same content is in the [ACM Queue BBR article from Oct 2016](http://queue.acm.org/detail.cfm?id=3022184)).  
-* \[[YouTube](https://www.youtube.com/watch?v=hIl_zXzU3DA)\] \[[slides](http://netdevconf.org/1.2/slides/oct5/04_Making_Linux_TCP_Fast_netdev_1.2_final.pdf)\] for a BBR talk at the Linux netdev 1.2 conference (Oct 2016\)  
-* \[[YouTube](https://youtu.be/qjWTULVbiVc?t=3460)\] \[[slides](https://www.ietf.org/proceedings/97/slides/slides-97-iccrg-bbr-congestion-control-02.pdf)\] for a BBR talk in the ICCRG session at IETF 97 (Nov 2016\)  
-* \[[YouTube](https://youtu.be/7wRXkQcD8PM?t=3317)\] \[[slides](https://www.ietf.org/proceedings/97/slides/slides-97-maprg-traffic-policing-in-the-internet-yuchung-cheng-and-neal-cardwell-00.pdf)\] for a talk covering policers and BBR's handling of policers, in the MAPRG session at IETF 97 (Nov 2016\)  
-* \[[YouTube](https://youtu.be/_rf4EjkaRNo?t=5751)\] \[[slides](https://www.ietf.org/proceedings/98/slides/slides-98-iccrg-an-update-on-bbr-congestion-control-00.pdf)\] BBR talk at the ICCRG session at IETF 98 (Mar 2017\)  
-* \[[YouTube](https://youtu.be/5EiUx_sXpak?t=1406)\] \[[slides](https://www.ietf.org/proceedings/99/slides/slides-99-iccrg-iccrg-presentation-2-00.pdf)\] BBR talk at the ICCRG session at IETF 99 (Jul 2017\)  
-* \[[YouTube](https://www.youtube.com/watch?v=IGw5NVGBsDU&t=43m58s)\] \[[slides](https://datatracker.ietf.org/meeting/100/materials/slides-100-iccrg-a-quick-bbr-update-bbr-in-shallow-buffers/)\] BBR talk at the ICCRG session at IETF 100 (Nov 2017\)  
-* \[[YouTube](https://www.youtube.com/watch?v=rHH9wFbms80&feature=youtu.be&t=52m09s)\] \[[slides](https://datatracker.ietf.org/meeting/101/materials/slides-101-iccrg-an-update-on-bbr-work-at-google-00)\] BBR talk at the ICCRG session at IETF 101 (Mar 2018\)  
-* \[[YouTube](https://youtu.be/LdjavTiMrs0?t=1h10m3s)\] \[[slides](https://datatracker.ietf.org/meeting/102/materials/slides-102-iccrg-an-update-on-bbr-work-at-google-00)\] BBR Congestion Control Work at Google: IETF 102 Update  (Jul 2018\)  
-* \[[YouTube](https://youtu.be/LdjavTiMrs0?t=1h36m42s)\] \[[slides](https://datatracker.ietf.org/meeting/102/materials/slides-102-iccrg-bbr-startup-behavior-01)\] BBR Congestion Control: IETF 102 Update: BBR Startup (Jul 2018\)  
-* \[[YouTube](https://youtu.be/cJ-0Ti8ZlfE?t=210)\] \[[slides](https://datatracker.ietf.org/meeting/104/materials/slides-104-iccrg-an-update-on-bbr-00)\] BBR v2: A Model-based Congestion Control \- ICCRG at IETF 104 (Mar 2019\)  
-* \[[YouTube](https://www.youtube.com/watch?v=6Njd4ApRsuo&feature=youtu.be&t=1149)\] \[[slides](https://datatracker.ietf.org/meeting/105/materials/slides-105-iccrg-bbr-v2-a-model-based-congestion-control-00)\] BBR v2: A Model-based Congestion Control: IETF 105 Update \- ICCRG (Jul 2019\)  
-* \[[YouTube](https://www.youtube.com/watch?v=i3CpETXwA7Q&feature=youtu.be&t=1679)\] \[[slides](https://datatracker.ietf.org/meeting/106/materials/slides-106-iccrg-update-on-bbrv2)\] BBR v2: A Model-based Congestion Control: Performance Optimizations \- IETF 106 \- ICCRG (Nov 2019\)  
-* \[[YouTube](https://www.youtube.com/watch?v=VIX45zMMZG8)\] BBR: A Model-based Congestion Control \- High-Speed Networking Workshop (May 2020\)  
-* \[[YouTube](https://www.youtube.com/watch?v=tBuXblC0o1M&feature=youtu.be&t=3485)\] \[[slides](https://datatracker.ietf.org/meeting/109/materials/slides-109-iccrg-update-on-bbrv2-00)\] BBR Update: 1: BBR.Swift; 2: Scalable Loss Handling \- IETF 109 \- ICCRG (Nov 2020\)  
-* \[[YouTube](https://youtu.be/Km7dzk6-4_E?t=5361)\] \[[slides](https://datatracker.ietf.org/meeting/110/materials/slides-110-iccrg-bbr-updates-00.pdf)\] BBR Internal Deployment, Code, Draft Plans \- IETF 110 \- ICCRG (Mar 2021\)  
-* \[YouTube\] \[[slides](https://datatracker.ietf.org/meeting/112/materials/slides-112-iccrg-bbrv2-update-00)\] BBRv2 Update: Internet Drafts & Deployment Inside Google \- IETF 112 \- ICCRG (Nov 2021)  
-* \[YouTube\] \[[slides](https://datatracker.ietf.org/meeting/112/materials/slides-112-iccrg-bbrv2-quic-update-00)\] BBRv2 Update: QUIC Tweaks and Internet Deployment \- IETF 112 ICCRG (Nov 2021)  
-* \[[YouTube](https://youtu.be/u-91t6JfjmY?t=2828)\] \[[slides](https://datatracker.ietf.org/meeting/117/materials/slides-117-ccwg-bbrv3-algorithm-bug-fixes-and-public-internet-deployment-00)\] BBRv3: Algorithm Updates and Public Internet Deployment \- IETF 117 \- CCWG (Jul 2023\)  
-* \[[YouTube](https://www.youtube.com/watch?v=ZVqQiA7h-W8&t=5378s)\] \[[slides](https://datatracker.ietf.org/meeting/119/materials/slides-119-ccwg-bbrv3-overview-and-google-deployment)\] BBRv3: Algorithm Overview and Google's Public Internet Deployment \- IETF 119 \- CCWG (Mar 2024\)  
-* \[[YouTube](https://www.youtube.com/watch?v=QYiiaOYkfjo&t=1173s)\] \[[slides](https://datatracker.ietf.org/meeting/120/materials/slides-120-ccwg-bbrv3-ccwg-internet-draft-update-00)\] BBRv3: Internet Draft Update: draft-cardwell-ccwg-bbr-00 \- IETF 120 \- CCWG (Jul 2024\)
-
-
-This is not an official Google product.
+### Installation
+1. Just run `sudo dpkg -i linux-*.deb` in your Linux terminal.
+1. Run `sudo update-grub` to update your GRUB bootloader. Note that this step may differ if you are using other bootloaders, like on Raspberry Pi or using uBoot. Check the instructions online for how to properly update your bootloader to boot to the new kernel.
+1. You may want to check if the current `/etc/sysctl.conf` and `/etc/sysctl.d/*.conf` config files contain any `net.ipv4.tcp_congestion_control` or `net.core.default_qdisc` which can accidentally overwrite the default values set by the kernel. You can remove those quickly using the following commands:
+    - `sudo sed -i '/net.ipv4.tcp_congestion_control/d' /etc/sysctl.conf`
+    - `sudo sed -i '/net.ipv4.tcp_congestion_control/d' /etc/sysctl.d/*.conf`
+    - `sudo sed -i '/net.core.default_qdisc/d' /etc/sysctl.conf`
+    - `sudo sed -i '/net.core.default_qdisc/d' /etc/sysctl.d/*.conf`
+1. You may want to enable TCP Fast Open (TFO) to further reduce RTT. TFO is proposed by a team from Google and described in RFC 7413. To do so, follow these steps:
+    1. Run `sysctl net.ipv4.tcp_fastopen`. If the current value is `3`, no need to change.
+    1. Otherwise, add `net.ipv4.tcp_fastopen = 3` to one of the `sysctl.d` files. Instructions to do so can be found online.
+1. You may want to enable TCP ECN to further reduce packet loss. ECN allows routers to signal impending network congestion to endpoints without dropping packets. To do so, follow these steps:
+    1. Run `sysctl net.ipv4.tcp_ecn`. If the current value is `1`, no need to change.
+    1. Otherwise, add `net.ipv4.tcp_ecn = 1` to one of the `sysctl.d` files. Instructions to do so can be found online.
+1. Reboot the system. To verify that the new kernel is working properly, please do the following checks:
+    - Running `uname -a` should give you the new kernel version and the `-bbr3` version suffix. 
+    - Running `sysctl net.ipv4.tcp_congestion_control` should give you `bbr`.
+    - Running `sysctl net.core.default_qdisc` should give you `fq_codel`.
+    - Running `sysctl net.ipv4.tcp_fastopen` should give you `3` (if configured).
+    - Running `sysctl net.ipv4.tcp_ecn` should give you `1` (if configured).
+1. Yay! Your system is now fully configured with BBR v3.
