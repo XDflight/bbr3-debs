@@ -477,11 +477,9 @@ menuconfig TCP_CONG_ADVANCED
 
 	  If unsure, say N.
 
-if TCP_CONG_ADVANCED
-
 config TCP_CONG_BIC
 	tristate "Binary Increase Congestion (BIC) control"
-	default m
+	default n
 	help
 	  BIC-TCP is a sender-side only change that ensures a linear RTT
 	  fairness under large windows while offering both scalability and
@@ -495,7 +493,7 @@ config TCP_CONG_BIC
 
 config TCP_CONG_CUBIC
 	tristate "CUBIC TCP"
-	default y
+	default m
 	help
 	  This is version 2.0 of BIC-TCP which uses a cubic growth function
 	  among other techniques.
@@ -503,7 +501,7 @@ config TCP_CONG_CUBIC
 
 config TCP_CONG_WESTWOOD
 	tristate "TCP Westwood+"
-	default m
+	default n
 	help
 	  TCP Westwood+ is a sender-side only modification of the TCP Reno
 	  protocol stack that optimizes the performance of TCP congestion
@@ -517,7 +515,7 @@ config TCP_CONG_WESTWOOD
 
 config TCP_CONG_HTCP
 	tristate "H-TCP"
-	default m
+	default n
 	help
 	  H-TCP is a send-side only modifications of the TCP Reno
 	  protocol stack that optimizes the performance of TCP
@@ -628,7 +626,7 @@ config TCP_CONG_ILLINOIS
 
 config TCP_CONG_DCTCP
 	tristate "DataCenter TCP (DCTCP)"
-	default n
+	default m
 	help
 	  DCTCP leverages Explicit Congestion Notification (ECN) in the network to
 	  provide multi-bit feedback to the end hosts. It is designed to provide:
@@ -666,7 +664,7 @@ config TCP_CONG_CDG
 
 config TCP_CONG_BBR
 	tristate "BBR TCP"
-	default n
+	default y
 	help
 
 	  BBR (Bottleneck Bandwidth and RTT) TCP congestion control is a
@@ -691,69 +689,27 @@ config TCP_CONG_BBR1
 
 choice
 	prompt "Default TCP congestion control"
-	default DEFAULT_CUBIC
+	default DEFAULT_RENO
 	help
 	  Select the TCP congestion control that will be used by default
 	  for all connections.
 
-	config DEFAULT_BIC
-		bool "Bic" if TCP_CONG_BIC=y
-
-	config DEFAULT_CUBIC
-		bool "Cubic" if TCP_CONG_CUBIC=y
-
-	config DEFAULT_HTCP
-		bool "Htcp" if TCP_CONG_HTCP=y
-
-	config DEFAULT_HYBLA
-		bool "Hybla" if TCP_CONG_HYBLA=y
-
-	config DEFAULT_VEGAS
-		bool "Vegas" if TCP_CONG_VEGAS=y
-
-	config DEFAULT_VENO
-		bool "Veno" if TCP_CONG_VENO=y
-
-	config DEFAULT_WESTWOOD
-		bool "Westwood" if TCP_CONG_WESTWOOD=y
-
-	config DEFAULT_DCTCP
-		bool "DCTCP" if TCP_CONG_DCTCP=y
-
-	config DEFAULT_CDG
-		bool "CDG" if TCP_CONG_CDG=y
-
 	config DEFAULT_BBR
 		bool "BBR" if TCP_CONG_BBR=y
 
-	config DEFAULT_BBR1
-		bool "BBR1" if TCP_CONG_BBR1=y
+	config DEFAULT_CUBIC
+		bool "Cubic" if TCP_CONG_CUBIC=y
 
 	config DEFAULT_RENO
 		bool "Reno"
 endchoice
 
-endif
-
-config TCP_CONG_CUBIC
-	tristate
-	depends on !TCP_CONG_ADVANCED
-	default y
-
 config DEFAULT_TCP_CONG
 	string
-	default "bic" if DEFAULT_BIC
-	default "cubic" if DEFAULT_CUBIC
-	default "htcp" if DEFAULT_HTCP
-	default "hybla" if DEFAULT_HYBLA
-	default "vegas" if DEFAULT_VEGAS
-	default "westwood" if DEFAULT_WESTWOOD
-	default "veno" if DEFAULT_VENO
-	default "reno" if DEFAULT_RENO
-	default "dctcp" if DEFAULT_DCTCP
-	default "cdg" if DEFAULT_CDG
 	default "bbr" if DEFAULT_BBR
-	default "cubic"
+	default "cubic" if DEFAULT_CUBIC
+	default "reno" if DEFAULT_RENO
+	default "bbr"
 
 config TCP_SIGPOOL
 	tristate

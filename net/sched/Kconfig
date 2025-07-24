@@ -423,20 +423,11 @@ choice
 	  Select the queueing discipline that will be used by default
 	  for all network devices.
 
-	config DEFAULT_FQ
-		bool "Fair Queue" if NET_SCH_FQ
-
-	config DEFAULT_CODEL
-		bool "Controlled Delay" if NET_SCH_CODEL
-
 	config DEFAULT_FQ_CODEL
 		bool "Fair Queue Controlled Delay" if NET_SCH_FQ_CODEL
 
-	config DEFAULT_FQ_PIE
-		bool "Flow Queue Proportional Integral controller Enhanced" if NET_SCH_FQ_PIE
-
-	config DEFAULT_SFQ
-		bool "Stochastic Fair Queue" if NET_SCH_SFQ
+	config DEFAULT_CAKE
+		bool "Common Applications Kept Enhanced" if NET_SCH_CAKE
 
 	config DEFAULT_PFIFO_FAST
 		bool "Priority FIFO Fast"
@@ -444,12 +435,11 @@ endchoice
 
 config DEFAULT_NET_SCH
 	string
-	default "pfifo_fast" if DEFAULT_PFIFO_FAST
-	default "fq" if DEFAULT_FQ
 	default "fq_codel" if DEFAULT_FQ_CODEL
-	default "fq_pie" if DEFAULT_FQ_PIE
-	default "sfq" if DEFAULT_SFQ
-	default "pfifo_fast"
+	default "cake" if DEFAULT_CAKE
+	default "pfifo_fast" if DEFAULT_PFIFO_FAST
+	default "fq_codel"
+
 endif
 
 comment "Classification"
