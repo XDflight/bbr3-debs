@@ -51,6 +51,7 @@ Please download all three packages in the release, namely the following:
     1. Run `sysctl net.ipv4.tcp_ecn`. If the current value is `1`, no need to change.
     1. Otherwise, add `net.ipv4.tcp_ecn = 1` to one of the `sysctl.d` files. Instructions to do so can be found online.
 1. Reboot the system. To verify that the new kernel is working properly, please do the following checks:
+    - Running `uname -a` should give you the new kernel version and the `-bbr3` version suffix. 
     - Running `sysctl net.ipv4.tcp_congestion_control` should give you `bbr`.
     - Running `sysctl net.core.default_qdisc` should give you `fq_codel`.
     - Running `sysctl net.ipv4.tcp_fastopen` should give you `3` (if configured).
