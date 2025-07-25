@@ -14,7 +14,7 @@ For convenience, a GitHub workflow has also been setup to compile those "modded"
 ### Compilation Highlights
 - Four TCP congestion control algorithms are available: `bbr` (Google BBR3), `dctcp`, `cubic`, and `reno`. `bbr` is the default and is built-in, `dctcp` and `cubic` were compiled as modules, and `reno` is built-in because it is the "original" one that comes with the Linux kernel. In general, `bbr` is recommended for general purposes (especially high bandwidth and variable/high latency environments), while `dctcp` is recommended for low latency environments such as data centers; `cubic` and `reno` are included mainly for debugging and testing purposes (more information about them can be found online). Because `bbr` is the default algorithm, there is no need to set `net.ipv4.tcp_congestion_control = bbr` in `sysctl.d`.
 - Two TCP active queue management algorithms are available: `fifo` and `fq_codel`. If you are not familiar with them, using the default one (`fq_codel`) will work in almost every scenarios. `fifo`, as its name suggests, is a very simple AQM algorithm that comes with the kernel originally, while `fq_codel` is configured as the default because it performs well with BBR, does not require careful parameter tuning, and is very robust in all network environments.
-- Other configurations are basically inherited from the "currently latest" (likely not the case when you read this `README`) official Debian kernel `6.1.0-35-amd64` (which uses Linux kernel `6.1.137`), with minors changes to adapt the configurations to newer kernels. The only two things worth highlighting are:
+- Other configurations are basically inherited from the "currently latest" (likely not the case when you read this `README`) official Debian kernel `6.1.0-35-amd64` (which is based on Linux kernel `6.1.137`), with minors changes to adapt the configurations to newer kernels. The only two things worth highlighting are:
     1. Kernel debug information is omitted because it is too big to upload to and download from GitHub and generally not useful if one does not do kernel development. Don't worry, many distros also omit kernel debug info in their standard install and offer them as a standalone package. 
     1. Transparent Hugepage Support (THP) is disabled in the kernels by default since it is recommended by many database systems (and I think may people will install these kernels on servers). Anyway, you can always change the setting yourself at `/sys/kernel/mm/transparent_hugepage/`.
 
@@ -28,6 +28,8 @@ Generally, look for any of the following versions:
 - **For best compatibility & less headache:** Choose the latest kernel that has the same (or close to the) major version (first two numbers) as your current kernel. You can check the version of your kernel using `uname -a`.
 - **For best stability & security:** Choose the latest LTS kernel.
 - **For most features & best support for new hardware:** Choose the latest kernel.
+
+In any case, please choose a kernel version that's higher/newer than your current kernel version, because many bootloaders (such as GRUB) will boot to the newest kernel by default. 
 
 As for the architecture (`amd64`, `arm64`, ...), just choose the one used by your system.
 
