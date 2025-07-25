@@ -11736,7 +11736,7 @@ index 905cf7635f77..c8c90c1b31ed 100644
  		info->tcpi_options |= TCPI_OPT_SYN_DATA;
  	if (tp->tcp_usec_ts)
 diff --git a/net/ipv4/tcp_bbr.c b/net/ipv4/tcp_bbr.c
-index 760941e55153..0744ac29bc0f 100644
+index 760941e55153..1d1934912e4b 100644
 --- a/net/ipv4/tcp_bbr.c
 +++ b/net/ipv4/tcp_bbr.c
 @@ -1,18 +1,19 @@
@@ -12100,7 +12100,7 @@ index 760941e55153..0744ac29bc0f 100644
 + */
 +static bool bbr_can_use_ecn(const struct sock *sk)
 +{
-+	return tcp_ecn_mode_any(sk) &&
++	return tcp_ecn_mode_any(tcp_sk(sk)) &&
 +	       (tcp_sk(sk)->ecn_flags & TCP_ECN_LOW);
 +}
 +
