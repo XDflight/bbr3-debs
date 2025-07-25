@@ -2,7 +2,12 @@ name: Build
 
 on:
   workflow_dispatch:
-
+    inputs:
+      branch:
+        description: "Branch"
+        required: true
+        default: "v3"
+    
 jobs:
 
   build:
@@ -10,17 +15,21 @@ jobs:
     runs-on: ${{ (matrix.arch == 'amd64' || matrix.arch == 'i386') && 'ubuntu-latest' || 'ubuntu-22.04-arm' }}
     strategy:
       matrix: 
-        branch: ["v3"]
+        branch: ["${{ github.event.inputs.branch }}"]
         arch: ["amd64", "arm64"]
         
     steps:
-      - name: "swap"
-        uses: thejerrybao/setup-swap-space@v1
+      - name: "free"
+        uses: jlumbroso/free-disk-space@main
         with:
-          swap-space-path: /swapfile
-          swap-size-gb: 2
-          remove-existing-swap-files: true
-      
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: false
+
       - name: "env"
         run: |
           echo -e "DATE=$(date --rfc-3339=date)" >> ${GITHUB_ENV}
@@ -40,7 +49,15 @@ jobs:
       - name: "checkout"
         uses: actions/checkout@v4
         with:
+          repository: ${{ matrix.branch == 'v3' && github.repository || 'gregkh/linux' }}
           ref: ${{ matrix.branch }}
+          fetch-depth: ${{ matrix.branch == 'v3' && 1 || 0 }}
+
+      - name: "patch"
+        if: ${{ matrix.branch != 'v3' }}
+        run: |
+          curl -L -o .patch "https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/build/patches/${{ matrix.branch }}.patch"
+          git apply -3 .patch
 
       - name: "dependencies"
         run: |
@@ -49,13 +66,8 @@ jobs:
           sudo apt-get install build-essential debhelper-compat=12 libelf-dev bc
           sudo apt-get install crossbuild-essential-${{ matrix.arch }}
           sudo apt-get install libssl-dev:${{ matrix.arch }}
-
-      - name: "free"
-        run: |
           sudo apt-get clean
           sudo apt-get autoremove
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
-          df -h
         
       - name: "configure"
         run: |
@@ -70,7 +82,7 @@ jobs:
         with:
           draft: true
           files: ../linux-*.deb
-          target_commitish: ${{ matrix.branch }}
+          target_commitish: ${{ matrix.branch == 'v3' && matrix.branch || 'build' }}
           tag_name: bbr3_${{ env.DATE }}_${{ matrix.branch }}_${{ matrix.arch }}
           fail_on_unmatched_files: true
           generate_release_notes: false
