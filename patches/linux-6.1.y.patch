@@ -11859,7 +11859,7 @@ index b64d53590f25..392d5acdc151 100644
  		info->tcpi_options |= TCPI_OPT_SYN_DATA;
  
 diff --git a/net/ipv4/tcp_bbr.c b/net/ipv4/tcp_bbr.c
-index 54eec33c6e1c..e6ee8468e35c 100644
+index 54eec33c6e1c..d04ff516d222 100644
 --- a/net/ipv4/tcp_bbr.c
 +++ b/net/ipv4/tcp_bbr.c
 @@ -1,18 +1,19 @@
@@ -12344,7 +12344,7 @@ index 54eec33c6e1c..e6ee8468e35c 100644
 +}
 +
 +/* Custom tcp_tso_autosize() for BBR, used at transmit time to cap skb size. */
-+__bpf_kfunc static u32 bbr_tso_segs(struct sock *sk, unsigned int mss_now)
++static u32 bbr_tso_segs(struct sock *sk, unsigned int mss_now)
  {
 -	return sk->sk_pacing_rate < (bbr_min_tso_rate >> 3) ? 1 : 2;
 +	return bbr_tso_segs_generic(sk, mss_now, sk->sk_gso_max_size);
@@ -13017,12 +13017,12 @@ index 54eec33c6e1c..e6ee8468e35c 100644
  		break;
  	case BBR_PROBE_RTT:
  		bbr->pacing_gain = BBR_UNIT;
-@@ -1012,144 +971,1387 @@ static void bbr_update_gains(struct sock *sk)
+@@ -1012,144 +971,1384 @@ static void bbr_update_gains(struct sock *sk)
  	}
  }
  
 -static void bbr_update_model(struct sock *sk, const struct rate_sample *rs)
-+__bpf_kfunc static u32 bbr_sndbuf_expand(struct sock *sk)
++static u32 bbr_sndbuf_expand(struct sock *sk)
  {
 -	bbr_update_bw(sk, rs);
 -	bbr_update_ack_aggregation(sk, rs);
@@ -13092,38 +13092,31 @@ index 54eec33c6e1c..e6ee8468e35c 100644
 -	bbr->cycle_idx = 0;
 -	bbr_reset_lt_bw_sampling(sk);
 -	bbr_reset_startup_mode(sk);
--
++	bbr->full_bw_now = 0;
++}
+ 
 -	bbr->ack_epoch_mstamp = tp->tcp_mstamp;
 -	bbr->ack_epoch_acked = 0;
 -	bbr->extra_acked_win_rtts = 0;
 -	bbr->extra_acked_win_idx = 0;
 -	bbr->extra_acked[0] = 0;
 -	bbr->extra_acked[1] = 0;
--
--	cmpxchg(&sk->sk_pacing_status, SK_PACING_NONE, SK_PACING_NEEDED);
-+	bbr->full_bw_now = 0;
- }
- 
--static u32 bbr_sndbuf_expand(struct sock *sk)
 +/* How much do we want in flight? Our BDP, unless congestion cut cwnd. */
 +static u32 bbr_target_inflight(struct sock *sk)
- {
--	/* Provision 3 * cwnd since BBR may slow-start even during recovery. */
--	return 3;
++{
 +	u32 bdp = bbr_inflight(sk, bbr_bw(sk), BBR_UNIT);
-+
+ 
+-	cmpxchg(&sk->sk_pacing_status, SK_PACING_NONE, SK_PACING_NEEDED);
 +	return min(bdp, tcp_sk(sk)->snd_cwnd);
  }
  
--/* In theory BBR does not need to undo the cwnd since it does not
-- * always reduce cwnd on losses (see bbr_main()). Keep it for now.
-- */
--static u32 bbr_undo_cwnd(struct sock *sk)
+-static u32 bbr_sndbuf_expand(struct sock *sk)
 +static bool bbr_is_probing_bandwidth(struct sock *sk)
  {
- 	struct bbr *bbr = inet_csk_ca(sk);
- 
--	bbr->full_bw = 0;   /* spurious slow-down; reset full pipe detection */
+-	/* Provision 3 * cwnd since BBR may slow-start even during recovery. */
+-	return 3;
++	struct bbr *bbr = inet_csk_ca(sk);
++
 +	return (bbr->mode == BBR_STARTUP) ||
 +		(bbr->mode == BBR_PROBE_BW &&
 +		 (bbr->cycle_idx == BBR_BW_PROBE_REFILL ||
@@ -13190,9 +13183,7 @@ index 54eec33c6e1c..e6ee8468e35c 100644
 +		bbr->ecn_eligible = 1;
 +
 +	/* Skip updating alpha only if not ECN-eligible and PLB is disabled. */
-+	want_ecn_alpha = (bbr->ecn_eligible ||
-+			  (bbr_can_use_ecn(sk) &&
-+			   READ_ONCE(net->ipv4.sysctl_tcp_plb_enabled)));
++	want_ecn_alpha = bbr->ecn_eligible;
 +	if (!want_ecn_alpha)
 +		return -1;
 +
@@ -13217,11 +13208,14 @@ index 54eec33c6e1c..e6ee8468e35c 100644
 +
 +	bbr_check_ecn_too_high_in_startup(sk, ce_ratio);
 +	return (int)ce_ratio;
-+}
-+
+ }
+ 
+-/* In theory BBR does not need to undo the cwnd since it does not
+- * always reduce cwnd on losses (see bbr_main()). Keep it for now.
 +/* Protective Load Balancing (PLB). PLB rehashes outgoing data (to a new IPv6
 + * flow label) if it encounters sustained congestion in the form of ECN marks.
-+ */
+  */
+-static u32 bbr_undo_cwnd(struct sock *sk)
 +static void bbr_plb(struct sock *sk, const struct rate_sample *rs, int ce_ratio)
 +{
 +	struct bbr *bbr = inet_csk_ca(sk);
@@ -13580,14 +13574,15 @@ index 54eec33c6e1c..e6ee8468e35c 100644
 + */
 +static void bbr_update_congestion_signals(
 +	struct sock *sk, const struct rate_sample *rs, struct bbr_context *ctx)
-+{
-+	struct bbr *bbr = inet_csk_ca(sk);
+ {
+ 	struct bbr *bbr = inet_csk_ca(sk);
 +	u64 bw;
 +
 +	if (rs->interval_us <= 0 || !rs->acked_sacked)
 +		return; /* Not a valid observation */
 +	bw = ctx->sample_bw;
-+
+ 
+-	bbr->full_bw = 0;   /* spurious slow-down; reset full pipe detection */
 +	if (!rs->is_app_limited || bw >= bbr_max_bw(sk))
 +		bbr_take_max_bw_sample(sk, bw);
 +
@@ -14139,8 +14134,7 @@ index 54eec33c6e1c..e6ee8468e35c 100644
 +	return false;
 +}
 +
-+__bpf_kfunc static void bbr_main(struct sock *sk, u32 ack, int flag,
-+				 const struct rate_sample *rs)
++static void bbr_main(struct sock *sk, const struct rate_sample *rs)
 +{
 +	struct tcp_sock *tp = tcp_sk(sk);
 +	struct bbr *bbr = inet_csk_ca(sk);
@@ -14181,7 +14175,7 @@ index 54eec33c6e1c..e6ee8468e35c 100644
 +	bbr->ecn_in_cycle  |= rs->delivered_ce > 0;
 +}
 +
-+__bpf_kfunc static void bbr_init(struct sock *sk)
++static void bbr_init(struct sock *sk)
 +{
 +	struct tcp_sock *tp = tcp_sk(sk);
 +	struct bbr *bbr = inet_csk_ca(sk);
@@ -14281,11 +14275,10 @@ index 54eec33c6e1c..e6ee8468e35c 100644
  }
  
 -/* Entering loss recovery, so save cwnd for when we exit or undo recovery. */
--static u32 bbr_ssthresh(struct sock *sk)
 +/* Core TCP stack informs us that the given skb was just marked lost. */
-+__bpf_kfunc static void bbr_skb_marked_lost(struct sock *sk,
++static void bbr_skb_marked_lost(struct sock *sk,
 +					    const struct sk_buff *skb)
- {
++{
 +	struct tcp_sock *tp = tcp_sk(sk);
 +	struct bbr *bbr = inet_csk_ca(sk);
 +	struct tcp_skb_cb *scb = TCP_SKB_CB(skb);
@@ -14332,7 +14325,7 @@ index 54eec33c6e1c..e6ee8468e35c 100644
 +}
 +
 +/* Revert short-term model if current loss recovery event was spurious. */
-+__bpf_kfunc static u32 bbr_undo_cwnd(struct sock *sk)
++static u32 bbr_undo_cwnd(struct sock *sk)
 +{
 +	struct bbr *bbr = inet_csk_ca(sk);
 +
@@ -14348,8 +14341,8 @@ index 54eec33c6e1c..e6ee8468e35c 100644
 +}
 +
 +/* Entering loss recovery, so save state for when we undo recovery. */
-+__bpf_kfunc static u32 bbr_ssthresh(struct sock *sk)
-+{
+ static u32 bbr_ssthresh(struct sock *sk)
+ {
 +	struct bbr *bbr = inet_csk_ca(sk);
 +
  	bbr_save_cwnd(sk);
@@ -14483,7 +14476,7 @@ index 54eec33c6e1c..e6ee8468e35c 100644
  	.get_info	= bbr_get_info,
  	.set_state	= bbr_set_state,
  };
-@@ -1160,10 +2362,11 @@ BTF_SET8_START(tcp_bbr_check_kfunc_ids)
+@@ -1160,10 +2359,11 @@ BTF_SET8_START(tcp_bbr_check_kfunc_ids)
  BTF_ID_FLAGS(func, bbr_init)
  BTF_ID_FLAGS(func, bbr_main)
  BTF_ID_FLAGS(func, bbr_sndbuf_expand)
@@ -14496,7 +14489,7 @@ index 54eec33c6e1c..e6ee8468e35c 100644
  BTF_ID_FLAGS(func, bbr_set_state)
  #endif
  #endif
-@@ -1198,5 +2401,12 @@ MODULE_AUTHOR("Van Jacobson <vanj@google.com>");
+@@ -1198,5 +2398,12 @@ MODULE_AUTHOR("Van Jacobson <vanj@google.com>");
  MODULE_AUTHOR("Neal Cardwell <ncardwell@google.com>");
  MODULE_AUTHOR("Yuchung Cheng <ycheng@google.com>");
  MODULE_AUTHOR("Soheil Hassas Yeganeh <soheil@google.com>");
