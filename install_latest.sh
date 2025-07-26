@@ -24,6 +24,12 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
+# Check if the user's system is using a compatible package manager
+if ! command -v dpkg &> /dev/null; then
+    echo -e "${COLOR_RED}This script is intended for Debian-based systems. Please run it on a compatible system.${COLOR_END}"
+    exit 1
+fi
+
 # Check if curl and jq are installed
 if ! command -v curl &> /dev/null; then
     echo -e "${COLOR_YELLOW}curl is not installed. Installing...${COLOR_END}"
@@ -126,6 +132,12 @@ sed -i '/net.core.default_qdisc/d' /etc/sysctl.conf
 sed -i '/net.core.default_qdisc/d' /etc/sysctl.d/*.conf
 echo -e "net.ipv4.tcp_fastopen = 3" >> /etc/sysctl.d/99-sysctl.conf
 echo -e "net.ipv4.tcp_ecn = 1" >> /etc/sysctl.d/99-sysctl.conf
+
+# Check if the user's bootloader is GRUB
+if ! command -v update-grub &> /dev/null; then
+    echo -e "${COLOR_MAGENTA}This system uses a bootloader other than GRUB. Please update your bootloader configuration manually.${COLOR_END}"
+    exit 0
+fi
 
 # Update GRUB configuration
 echo -e "${COLOR_CYAN}Updating GRUB configuration...${COLOR_END}"
