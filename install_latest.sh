@@ -49,7 +49,7 @@ fi
 
 # Clear any previous downloads
 echo "Cleaning up previous downloads..."
-rm linux-*.deb
+rm -f linux-*.deb
 if [ $? -ne 0 ]; then
     echo "Error cleaning up previous downloads."
     exit 1
