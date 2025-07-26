@@ -59,7 +59,7 @@ CURRENT_VERSION="linux-$(uname -r)-$ARCH"
 
 # Fetch the latest release information from GitHub
 echo -e "${COLOR_CYAN}Fetching release information...${COLOR_END}"
-RELEASE_LIST=$(curl -s -L "https://api.github.com/repos/XDflight/bbr3-debs/releases")
+RELEASE_LIST=$(curl -sL "https://api.github.com/repos/XDflight/bbr3-debs/releases")
 if [ $? -ne 0 ]; then
     echo -e "${COLOR_RED}Error fetching release information.${COLOR_END}"
     exit 1
@@ -130,8 +130,12 @@ sed -i '/net.ipv4.tcp_congestion_control/d' /etc/sysctl.conf
 sed -i '/net.ipv4.tcp_congestion_control/d' /etc/sysctl.d/*.conf
 sed -i '/net.core.default_qdisc/d' /etc/sysctl.conf
 sed -i '/net.core.default_qdisc/d' /etc/sysctl.d/*.conf
-echo -e "net.ipv4.tcp_fastopen = 3" >> /etc/sysctl.d/99-sysctl.conf
-echo -e "net.ipv4.tcp_ecn = 1" >> /etc/sysctl.d/99-sysctl.conf
+sed -i '/net.ipv4.tcp_fastopen/d' /etc/sysctl.conf
+sed -i '/net.ipv4.tcp_fastopen/d' /etc/sysctl.d/*.conf
+sed -i '/net.ipv4.tcp_ecn/d' /etc/sysctl.conf
+sed -i '/net.ipv4.tcp_ecn/d' /etc/sysctl.d/*.conf
+echo -e "net.ipv4.tcp_fastopen = 3" | tee -a /etc/sysctl.d/99-sysctl.conf > /dev/null
+echo -e "net.ipv4.tcp_ecn = 1" | tee -a /etc/sysctl.d/99-sysctl.conf > /dev/null
 
 # Check if the user's bootloader is GRUB
 if ! command -v update-grub &> /dev/null; then
