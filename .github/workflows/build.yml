@@ -63,9 +63,9 @@ jobs:
         run: |
           sudo dpkg --add-architecture ${{ matrix.arch }}
           sudo apt-get update
-          sudo apt-get install build-essential debhelper-compat=12 libelf-dev bc
-          sudo apt-get install crossbuild-essential-${{ matrix.arch }}
-          sudo apt-get install libssl-dev:${{ matrix.arch }} libdw-dev:${{ matrix.arch }}
+          sudo apt-get install -y build-essential debhelper-compat=12 libelf-dev bc
+          sudo apt-get install -y crossbuild-essential-${{ matrix.arch }}
+          sudo apt-get install -y libssl-dev:${{ matrix.arch }} libdw-dev:${{ matrix.arch }}
           sudo apt-get clean
           sudo apt-get autoremove
         
