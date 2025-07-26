@@ -134,6 +134,7 @@ sed -i '/net.ipv4.tcp_fastopen/d' /etc/sysctl.conf
 sed -i '/net.ipv4.tcp_fastopen/d' /etc/sysctl.d/*.conf
 sed -i '/net.ipv4.tcp_ecn/d' /etc/sysctl.conf
 sed -i '/net.ipv4.tcp_ecn/d' /etc/sysctl.d/*.conf
+[ "$(tail -c 1 /etc/sysctl.d/99-sysctl.conf)" != "" ] && echo "" >> /etc/sysctl.d/99-sysctl.conf
 echo -e "net.ipv4.tcp_fastopen = 3" | tee -a /etc/sysctl.d/99-sysctl.conf > /dev/null
 echo -e "net.ipv4.tcp_ecn = 1" | tee -a /etc/sysctl.d/99-sysctl.conf > /dev/null
 
