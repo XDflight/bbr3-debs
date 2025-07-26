@@ -1,6 +1,6 @@
 # Latest Linux kernels merged with Google BBR v3
 
-**Choose Language:** &nbsp; [English](#) &nbsp; [中文]()
+**Choose Language:** &nbsp; [English](#) &nbsp; [中文](README_zh.md)
 
 > **TL;DR:** BBR enables big throughput improvements on high-speed, long-haul links: BBR's throughput can be 2700x higher than today's best loss-based congestion control, CUBIC (CUBIC gets about 3.3 Mbps, while BBR gets over 9,100 Mbps); BBR also enables significant reductions in latency in last-mile networks that connect users to the internet: BBR can keep queuing delay 25x lower than CUBIC [(BBR v1 official blog in 2017)](https://cloud.google.com/blog/products/networking/tcp-bbr-congestion-control-comes-to-gcp-your-internet-just-got-faster). BBR v3, which has not yet been merged into the kernel, is an improved version of BBR v1.
 
