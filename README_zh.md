@@ -1,6 +1,6 @@
 # 最新 Linux 内核，集成 Google BBR v3
 
-**选择语言：** &nbsp; [English](#) &nbsp; [中文]()
+**选择语言：** &nbsp; [English](README.md) &nbsp; [中文](#)
 
 > **一句话总结：** BBR 在高速、长距离网络中能带来巨大的吞吐量提升：BBR 的吞吐量比目前最好的基于丢包的拥塞控制算法 CUBIC 高 2700 倍（CUBIC 大约 3.3 Mbps，而 BBR 超过 9100 Mbps）；在连接用户到互联网的最后一公里网络中，BBR 还能显著降低延迟：BBR 可以将排队延迟保持在 CUBIC 的 1/25 [(BBR v1 官方博客，2017)](https://cloud.google.com/blog/products/networking/tcp-bbr-congestion-control-comes-to-gcp-your-internet-just-got-faster)。BBR v3 是 BBR v1 的改进版，但尚未合并到内核中。
 
