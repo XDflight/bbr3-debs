@@ -4,7 +4,7 @@
 
 > **一句话总结：** BBR 在高速、长距离网络中能带来巨大的吞吐量提升：BBR 的吞吐量比目前最好的基于丢包的拥塞控制算法 CUBIC 高 2700 倍（CUBIC 大约 3.3 Mbps，而 BBR 超过 9100 Mbps）；在连接用户到互联网的最后一公里网络中，BBR 还能显著降低延迟：BBR 可以将排队延迟保持在 CUBIC 的 1/25 [(BBR v1 官方博客，2017)](https://cloud.google.com/blog/products/networking/tcp-bbr-congestion-control-comes-to-gcp-your-internet-just-got-faster)。BBR v3 是 BBR v1 的改进版，但尚未合并到内核中。
 
-### 一键安装 & 更新
+### 一键安装 & 更新 & 修复
 **重要提示：**
 - 运行以下命令前，请确保你以有权限的用户登录系统（即可以使用 `sudo`）。
 - 系统中需要安装 `dpkg`，它是 Debian/Ubuntu 系统自带的包管理工具。
@@ -17,17 +17,24 @@ curl -sL "https://raw.githubusercontent.com/XDflight/bbr3-debs/refs/heads/build/
 ```
 中国大陆用户可以运行以下命令以加快下载速度：
 ```
-curl -sL "https://ghfast.top/https://raw.githubusercontent.com/XDflight/bbr3-debs/refs/heads/build/install_latest.sh" | sudo CDN=1 bash -s
+curl -sL "https://ghfast.top/https://raw.githubusercontent.com/XDflight/bbr3-debs/refs/heads/build/install_latest.sh" | sudo CDN_URL="https://ghfast.top/" bash -s
 ```
 如果每一步都顺利完成，那就大功告成啦！
-无需进行任何后续配置。
-要验证是否一切正常，可以查看本文档的 *安装* 部分了解详情。
+无需进行任何后续配置（除了必须的重启）。
 
-使用上述命令也可以更新当前内核。
+要验证是否一切正常，只需再次运行上述命令。
+你可以期待脚本输出中出现 `sysctl settings are correct.`。
+如果任何检查失败，脚本会自动帮助你修复内核和/或 sysctl 设置。
+
+上述命令也可用于更新内核。
+每次运行时，它都会检查内核更新，并在有新版本时自动更新内核。
 
 **当前支持的 CPU 架构：**
 - `amd64` / `x86-64`
 - `arm64` / `aarch64`
+
+**在非交互式流程中使用脚本：**
+为了防止脚本提示用户重启，可以在脚本的第一个参数中提供 `-y`（`--yes`）或 `-n`（`--no`），以选择脚本是否在安装、更新或修复后自动重启系统。
 
 ---
 

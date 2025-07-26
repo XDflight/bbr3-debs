@@ -4,7 +4,7 @@
 
 > **TL;DR:** BBR enables big throughput improvements on high-speed, long-haul links: BBR's throughput can be 2700x higher than today's best loss-based congestion control, CUBIC (CUBIC gets about 3.3 Mbps, while BBR gets over 9,100 Mbps); BBR also enables significant reductions in latency in last-mile networks that connect users to the internet: BBR can keep queuing delay 25x lower than CUBIC [(BBR v1 official blog in 2017)](https://cloud.google.com/blog/products/networking/tcp-bbr-congestion-control-comes-to-gcp-your-internet-just-got-faster). BBR v3, which has not yet been merged into the kernel, is an improved version of BBR v1.
 
-### One-click install & update
+### One-click install & update & repair
 **Important notes:**
 - You have to login your system as a privileged user (i.e., `sudo`-able) in order to run the following command.
 - `dpkg` should be available on your system in order to install packages provided by this repo. `dpkg` comes with Debian/Ubuntu systems.
@@ -17,17 +17,24 @@ curl -sL "https://raw.githubusercontent.com/XDflight/bbr3-debs/refs/heads/build/
 ```
 Mainland China users may run the following command instead for faster download:
 ```
-curl -sL "https://ghfast.top/https://raw.githubusercontent.com/XDflight/bbr3-debs/refs/heads/build/install_latest.sh" | sudo CDN=1 bash -s
+curl -sL "https://ghfast.top/https://raw.githubusercontent.com/XDflight/bbr3-debs/refs/heads/build/install_latest.sh" | sudo CDN_URL="https://ghfast.top/" bash -s
 ```
 You are good to go if every step completed without error.
-No post-installation configuration required.
-To verify if everything is working properly, you may proceed to the *Installation* section of this document for details. 
+No post-installation configuration (except the mandatory reboot) is required.
 
-You can update your current kernel using the same command above. 
+To verify that everything is working properly after the reboot, just run the same command again.
+You can expect to see `sysctl settings are correct.` in the script's output. 
+The script will automatically help you repair your kernel and/or sysctl settings if any of the checks fails. 
+
+The command can also be used to update the kernel.
+It will check for kernel update every time it runs, and will update the kernel if a newer version is available.
 
 **Currently supported CPU architectures:**
 - `amd64` / `x86-64`
 - `arm64` / `aarch64`
+
+**Using the script in non-interactive flows:**
+To prevent the script from prompting the user for reboot, one can supply `-y`(`--yes`) or `-n`(`--no`) as the first argument to the script to select whether or not the script should automatically reboot the system after installation, update, or repair. 
 
 ---
 
@@ -64,7 +71,7 @@ In any case, please choose a kernel version that's higher/newer than your curren
 As for the architecture (`amd64`, `arm64`, ...), just choose the one used by your system.
 
 Please download all three packages in the release, namely the following:
-- `linux-headers-*`: The header files of the kernel. Those will be useful to build external kernel modules.
+- `linux-headers-*`: The header files of the kernel. Useful for building external kernel modules.
 - `linux-image-*`: The kernel binary - the most important one.
 - `linux-libc-dev-*`: The standard C library `libc` and other user-space stuff critical for things to work.
 
@@ -89,6 +96,4 @@ Please download all three packages in the release, namely the following:
     - Running `sysctl net.ipv4.tcp_fastopen` should give you `3` (if configured).
     - Running `sysctl net.ipv4.tcp_ecn` should give you `1` (if configured).
 1. Yay! Your system is now fully configured with BBR v3.
-
-### Update
-You can follow the same instructions above to update your kernel. 
+1. You may update the kernel using the same instructions above. 

@@ -15884,7 +15884,7 @@ index bc94df0140bf..d38629b77b02 100644
  		const struct tcp_congestion_ops *ca;
  
 diff --git a/net/ipv4/tcp_output.c b/net/ipv4/tcp_output.c
-index 40568365cdb3..5f0c355fd4a8 100644
+index 40568365cdb3..93845ae8f382 100644
 --- a/net/ipv4/tcp_output.c
 +++ b/net/ipv4/tcp_output.c
 @@ -324,10 +324,9 @@ static void tcp_ecn_send_syn(struct sock *sk, struct sk_buff *skb)
@@ -15924,7 +15924,7 @@ index 40568365cdb3..5f0c355fd4a8 100644
  	struct tcp_sock *tp = tcp_sk(sk);
  	struct sk_buff *buff;
 -	int nsize, old_factor;
-+	int old_factor, inflight_prev;
++	int nsize, old_factor, inflight_prev;
  	long limit;
  	int nlen;
  	u8 flags;
