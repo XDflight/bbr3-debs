@@ -40,12 +40,7 @@ if ! command -v jq &> /dev/null; then
 fi
 
 # Get the current kernel version and architecture
-ARCH=$(uname -m)
-if [[ "$ARCH" == "x86_64" ]]; then
-    ARCH="amd64"
-elif [[ "$ARCH" == "aarch64" ]]; then
-    ARCH="arm64"
-fi
+ARCH=$(dpkg --print-architecture)
 CURRENT_VERSION="linux-$(uname -r)-$ARCH"
 
 # Fetch the latest release information from GitHub
