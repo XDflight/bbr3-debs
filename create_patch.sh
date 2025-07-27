@@ -1,9 +1,10 @@
 #!/bin/bash
 
+OUT_DIR="patches"
 if [[ -n "$3" ]]; then
-  OUT_FILE="$3.patch"
+  OUT_FILE="$OUT_DIR/$3.patch"
 else
-  OUT_FILE="patches/$2.patch"
+  OUT_FILE="$OUT_DIR/$2.patch"
 fi
 
 # $1: base branch/tag/commit
@@ -13,7 +14,7 @@ if [[ -n "$1" && -n "$2" ]]; then
 else
   echo "Usage: $0 <base> <feature> [output_file]"
   echo 'If output_file is provided, it will be used as the name for the patch file;'
-  echo 'if output_file is not provided, it will default to "patches/<feature>.patch".'
+  echo 'if output_file is not provided, it will default to <feature>.'
   exit 1
 fi
 git diff -U3 $1..$2 > "$OUT_FILE"
