@@ -31,7 +31,10 @@ curl -sL "https://ghfast.top/https://raw.githubusercontent.com/XDflight/bbr3-deb
 
 **当前支持的 CPU 架构：**
 - `amd64` / `x86-64`
+- `i386` / `i686` / `ia32` / `x86` / `x86-32`
 - `arm64` / `aarch64`
+- `armhf` / `armv7` / `arm` / `arm32` / `aarch32` (hard-float)
+- `riscv64`
 
 **在非交互式流程中使用脚本：**
 为了防止脚本提示用户重启，可以在脚本的第一个参数中提供 `-y`（`--yes`）或 `-n`（`--no`），以选择脚本是否在安装、更新或修复后自动重启系统。
