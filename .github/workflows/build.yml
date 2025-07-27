@@ -62,15 +62,15 @@ jobs:
           curl -LO "https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/build/patches/${{ matrix.branch }}.patch"
           curl -LO "https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/build/patches/arch32.patch"
           git apply -3 ${{ matrix.branch }}.patch
-          git apply -3 arch32.patch
+          patch -p1 < arch32.patch
 
       - name: "dependencies"
         run: |
           sudo dpkg --add-architecture ${{ matrix.arch }}
           sudo apt-get update
-          sudo apt-get install -y build-essential debhelper-compat=12 libelf-dev bc
+          sudo apt-get install -y build-essential debhelper-compat=12 libelf-dev bc libdw-dev
           sudo apt-get install -y crossbuild-essential-${{ matrix.arch }}
-          sudo apt-get install -y libssl-dev:${{ matrix.arch }} libdw-dev:${{ matrix.arch }}
+          sudo apt-get install -y libssl-dev:${{ matrix.arch }}
           sudo apt-get clean
           sudo apt-get autoremove
         
