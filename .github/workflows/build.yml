@@ -19,7 +19,7 @@ jobs:
     strategy:
       matrix: 
         branch: ["${{ github.event.inputs.branch || 'linux-rolling-stable' }}"]
-        arch: ["amd64", "arm64"]
+        arch: ["amd64", "i386", "arm64", "armhf"]
         
     steps:
       - name: "free"
