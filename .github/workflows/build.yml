@@ -19,7 +19,7 @@ jobs:
     strategy:
       matrix: 
         branch: ["${{ github.event.inputs.branch || 'linux-rolling-stable' }}"]
-        arch: ["amd64", "i386", "arm64", "armhf"]
+        arch: ["amd64", "i386", "arm64", "armhf", "riscv64"]
         
     steps:
       - name: "free"
@@ -47,6 +47,9 @@ jobs:
           fi
           if [[ "${{ matrix.arch }}" == "armhf" ]]; then
             echo -e "MAKE_ENV=ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- KBUILD_DEBARCH=armhf" >> ${GITHUB_ENV}
+          fi
+          if [[ "${{ matrix.arch }}" == "riscv64" ]]; then
+            echo -e "MAKE_ENV=ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu-" >> ${GITHUB_ENV}
           fi
       
       - name: "checkout"
