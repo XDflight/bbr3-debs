@@ -34,6 +34,7 @@ It will check for kernel update every time it runs, and will update the kernel i
 - `i386` / `i686` / `ia32` / `x86` / `x86-32`
 - `arm64` / `aarch64`
 - `armhf` / `armv7` / `arm` / `arm32` / `aarch32` (hard-float)
+- `riscv64`
 
 **Using the script in non-interactive flows:**
 To prevent the script from prompting the user for reboot, one can supply `-y`(`--yes`) or `-n`(`--no`) as the first argument to the script to select whether or not the script should automatically reboot the system after installation, update, or repair. 
