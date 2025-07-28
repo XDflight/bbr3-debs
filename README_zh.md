@@ -1,6 +1,6 @@
 # 最新 Linux 内核，集成 Google BBR v3
 
-**选择语言：** &nbsp; [English](README.md) &nbsp; [中文](#)
+**选择语言：** [English](README.md) &nbsp; [中文](#) &nbsp; [日本語](README_ja.md)
 
 > **一句话总结：** BBR 在高速、长距离网络中能带来巨大的吞吐量提升：BBR 的吞吐量比目前最好的基于丢包的拥塞控制算法 CUBIC 高 2700 倍（CUBIC 大约 3.3 Mbps，而 BBR 超过 9100 Mbps）；在连接用户到互联网的最后一公里网络中，BBR 还能显著降低延迟：BBR 可以将排队延迟保持在 CUBIC 的 1/25 [(BBR v1 官方博客，2017)](https://cloud.google.com/blog/products/networking/tcp-bbr-congestion-control-comes-to-gcp-your-internet-just-got-faster)。BBR v3 是 BBR v1 的改进版，但尚未合并到内核中。
 
@@ -33,7 +33,7 @@ curl -sL "https://ghfast.top/https://raw.githubusercontent.com/XDflight/bbr3-deb
 - `amd64` / `x86-64`
 - `i386` / `i686` / `ia32` / `x86` / `x86-32`
 - `arm64` / `aarch64`
-- `armhf` / `armv7` / `arm` / `arm32` / `aarch32` (hard-float)
+- `armhf` / `armv7` / `arm` / `arm32` / `aarch32` (硬浮点)
 - `riscv64`
 
 **在非交互式流程中使用脚本：**
@@ -100,3 +100,19 @@ BBR v3 是 BBR v1 的改进版，主要目标是解决不公平性和高重传�
     - 运行 `sysctl net.ipv4.tcp_ecn` 应显示 `1`（如果已配置）。
 1. 恭喜！你的系统现在已经完全配置为使用 BBR v3。
 1. 你可以按照上述相同的说明更新内核。
+
+---
+
+### 发布计划
+编译好的内核会以每周为周期发布，或者在有新内核版本时发布。
+具体来说，GitHub 工作流会在每周一 07:21 UTC 自动触发，拉取最新稳定内核的源码，并集成 BBR v3 进行编译。
+编译完成后，`.deb` 包会作为草稿发布到 GitHub Releases 页面。
+草稿发布会在分配标签和撰写发布说明后手动发布。
+如果编译过程中出现异常，尤其是补丁文件因上游冲突无法干净应用，工作流会失败，补丁文件会随后进行审查和修复。
+这可能需要一些时间，请耐心等待。
+同时会密切关注 BBR 开发团队的更新，特别是 `google/bbr` 仓库、BBR 开发 Google 组以及 `ietf-wg-ccwg/draft-ietf-ccwg-bbr` 的 RFC 草案，并对补丁文件进行修改以跟上 BBR 的最新进展。
+
+### 贡献
+如果你遇到任何问题或有兴趣为本项目贡献，请随时打开 issue 或 pull request。
+任何建议或改进都欢迎。
+顺便提一句，请确保不仅在这里报告任何性能相关问题，还要向 BBR 开发团队报告，以便他们调查并修复上游代码中的问题。谢谢！
