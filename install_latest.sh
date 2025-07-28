@@ -165,7 +165,7 @@ if [[ $1 == "-y" || $1 == "--yes" ]]; then
         exit 1
     fi
     exit 0
-else if [[ $1 == "-n" || $1 == "--no" ]]; then
+elif [[ $1 == "-n" || $1 == "--no" ]]; then
     echo -e "${COLOR_YELLOW}You chose not to reboot now.${COLOR_END}"
     exit 0
 fi
