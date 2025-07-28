@@ -1,6 +1,6 @@
 # Latest Linux kernels merged with Google BBR v3
 
-**Choose Language:** &nbsp; [English](#) &nbsp; [中文](README_zh.md)
+**Choose Language:** &nbsp; [English](#) &nbsp; [中文](README_zh.md) &nbsp; [日本語](README_ja.md)
 
 > **TL;DR:** BBR enables big throughput improvements on high-speed, long-haul links: BBR's throughput can be 2700x higher than today's best loss-based congestion control, CUBIC (CUBIC gets about 3.3 Mbps, while BBR gets over 9,100 Mbps); BBR also enables significant reductions in latency in last-mile networks that connect users to the internet: BBR can keep queuing delay 25x lower than CUBIC [(BBR v1 official blog in 2017)](https://cloud.google.com/blog/products/networking/tcp-bbr-congestion-control-comes-to-gcp-your-internet-just-got-faster). BBR v3, which has not yet been merged into the kernel, is an improved version of BBR v1.
 
@@ -100,3 +100,19 @@ Please download all three packages in the release, namely the following:
     - Running `sysctl net.ipv4.tcp_ecn` should give you `1` (if configured).
 1. Yay! Your system is now fully configured with BBR v3.
 1. You may update the kernel using the same instructions above. 
+
+---
+
+### Release schedule
+Compiled kernels will be released on a weekly basis, or whenever there is a new kernel version available.
+Specifically, a GitHub workflow will be automatically triggered every *Monday at 07:21 UTC* to pull the source code of the latest stable kernel and compile it with BBR v3 integrated.
+It will then upload the compiled `.deb` packages to the GitHub Releases page as a set of draft releases.
+The draft releases will be published manually after their tags are assigned and their release notes are written.
+If any abnormalities occur during the compilation, especially if the patch files fail to apply cleanly due to upstream conflicts, the workflow will fail and the patch files will later be reviewed and fixed.
+This may take some time, so please be patient.
+Updates from the BBR development team, particularly from the `google/bbr` repo, the BBR Development Google Group, and the RFC draft at `ietf-wg-ccwg/draft-ietf-ccwg-bbr`, will also be monitored closely, and changes will be made to the patch files to keep up with the latest developments on BBR.
+
+### Contributing
+If you have encountered any issues or are interested in contributing to this project, please feel free to open an issue or a pull request.
+Any suggestions or improvements are welcome.
+By the way, make sure to report any performance-related problems not only here but also to the BBR development team, so that they can investigate and fix the issues in the upstream code. Thanks!
