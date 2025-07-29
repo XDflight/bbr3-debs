@@ -75,11 +75,9 @@ if [[ "$LATEST_TAG" != "$CURRENT_VERSION" ]]; then
         echo -e "${COLOR_YELLOW}A newer version is available: ${COLOR_GREEN}$LATEST_TAG${COLOR_END}"
     fi
     
-    # Clear any previous downloads
-    echo -e "${COLOR_CYAN}Cleaning up previous downloads...${COLOR_END}"
-    rm -f linux-*.deb
-    if [ $? -ne 0 ]; then
-        echo -e "${COLOR_RED}Error cleaning up previous downloads.${COLOR_END}"
+    TMP_DIR=$(mktemp -d)
+    if [ ! -d "$TMP_DIR" ]; then
+        echo -e "${COLOR_RED}Error creating temporary directory.${COLOR_END}"
         exit 1
     fi
 
@@ -87,7 +85,7 @@ if [[ "$LATEST_TAG" != "$CURRENT_VERSION" ]]; then
     echo -e "${COLOR_CYAN}Downloading assets from the latest release...${COLOR_END}"
     DOWNLOAD_URLS=$(echo "$LATEST_RELEASE" | grep "browser_download_url" | cut -d '"' -f 4)
     for URL in $DOWNLOAD_URLS; do
-        curl -LO "$CDN_URL$URL"
+        curl -L "$CDN_URL$URL" -o "$TMP_DIR/$(basename $URL)"
         if [ $? -ne 0 ]; then
             echo -e "${COLOR_RED}Error downloading $URL${COLOR_END}"
             exit 1
@@ -97,7 +95,7 @@ if [[ "$LATEST_TAG" != "$CURRENT_VERSION" ]]; then
 
     # Install the downloaded packages
     echo -e "${COLOR_CYAN}Installing downloaded packages...${COLOR_END}"
-    dpkg -i linux-*.deb
+    dpkg -i $TMP_DIR/linux-*.deb
     if [ $? -ne 0 ]; then
         echo -e "${COLOR_RED}Error installing packages.${COLOR_END}"
         exit 1
@@ -105,7 +103,7 @@ if [[ "$LATEST_TAG" != "$CURRENT_VERSION" ]]; then
 
     # Clean up downloaded files
     echo -e "${COLOR_CYAN}Cleaning up downloaded files...${COLOR_END}"
-    rm linux-*.deb
+    rm $TMP_DIR/linux-*.deb
     if [ $? -ne 0 ]; then
         echo -e "${COLOR_RED}Error cleaning up downloaded files.${COLOR_END}"
         exit 1
