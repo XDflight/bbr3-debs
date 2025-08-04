@@ -91,7 +91,8 @@ jobs:
           draft: true
           files: ../linux-*.deb
           target_commitish: ${{ matrix.branch == 'v3' && matrix.branch || 'build' }}
-          tag_name: bbr3_${{ env.DATE }}_${{ matrix.branch }}_${{ matrix.arch }}
+          tag_name: ${{ matrix.branch }}-bbr3-${{ matrix.arch }}_${{ env.DATE }}
+          name: "${{ matrix.branch }} BBR-v3 ${{ matrix.arch }}"
           fail_on_unmatched_files: true
           generate_release_notes: false
           append_body: true
