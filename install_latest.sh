@@ -155,22 +155,29 @@ echo -e "net.ipv4.tcp_ecn = 1" | tee -a /etc/sysctl.d/99-sysctl.conf > /dev/null
 # Reboot manually if -n or --no is passed
 # If no option is passed, prompt the user for reboot
 echo -e "${COLOR_GREEN}Installation complete. ${COLOR_YELLOW}A reboot is required to apply the changes.${COLOR_END}"
-if [[ $1 == "-y" || $1 == "--yes" ]]; then
-    echo -e "${COLOR_GREEN}Rebooting now...${COLOR_END}"
-    reboot
-    if [ $? -ne 0 ]; then
-        echo -e "${COLOR_RED}Error rebooting the system. Please reboot manually.${COLOR_END}"
-        exit 1
-    fi
-    exit 0
-elif [[ $1 == "-n" || $1 == "--no" ]]; then
-    echo -e "${COLOR_YELLOW}You chose not to reboot now.${COLOR_END}"
-    exit 0
-fi
-read -p "Do you want to reboot now? (y/N): " REBOOT
-if [[ "$REBOOT" == "y" || "$REBOOT" == "Y" ]]; then
-    echo -e "${COLOR_CYAN}Rebooting now...${COLOR_END}"
-    reboot
+
+# Determine reboot choice based on argument or prompt user
+if [[ "$1" == "-y" || "$1" == "--yes" ]]; then
+    REBOOT="y"
+elif [[ "$1" == "-n" || "$1" == "--no" ]]; then
+    REBOOT="n"
 else
-    echo -e "${COLOR_YELLOW}Please reboot your system later to apply the changes.${COLOR_END}"
+    read -p "Do you want to reboot now? (y/N): " REBOOT
 fi
+
+case "$REBOOT" in
+    [yY])
+        echo -e "${COLOR_CYAN}Rebooting now...${COLOR_END}"
+        reboot
+        if [ $? -ne 0 ]; then
+            echo -e "${COLOR_RED}Error rebooting the system. Please reboot manually.${COLOR_END}"
+            exit 1
+        fi
+        ;;
+    [nN])
+        echo -e "${COLOR_YELLOW}You chose not to reboot now.${COLOR_END}"
+        ;;
+    *)
+        echo -e "${COLOR_YELLOW}Please reboot your system later to apply the changes.${COLOR_END}"
+        ;;
+esac
