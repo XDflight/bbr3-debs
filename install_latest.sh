@@ -68,7 +68,7 @@ fi
 
 # Check if the current kernel is the latest
 if [[ "$LATEST_TAG" != "$CURRENT_VERSION" ]]; then
-    if [[ -z "$(grep \"bbr3\" <<< \"$CURRENT_VERSION\")" ]]; then
+    if [[ "$CURRENT_VERSION" != *bbr3* ]]; then
         echo -e "${COLOR_YELLOW}This seems to be the first time you are installing BBR3 on this system. Proceeding with installation...${COLOR_END}"
     else
         echo -e "${COLOR_YELLOW}Current kernel version: ${COLOR_RED}$CURRENT_VERSION${COLOR_END}"
