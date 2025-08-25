@@ -13,11 +13,11 @@
 
 To install the latest Linux kernel with Google BBR v3 integrated and enabled, simply run the following command:
 ```
-curl -sL "https://raw.githubusercontent.com/XDflight/bbr3-debs/refs/heads/build/install_latest.sh" | sudo bash -s
+wget "https://raw.githubusercontent.com/XDflight/bbr3-debs/refs/heads/build/install_latest.sh" && sudo ./install_latest.sh
 ```
 Mainland China users may run the following command instead for faster download:
 ```
-curl -sL "https://ghfast.top/https://raw.githubusercontent.com/XDflight/bbr3-debs/refs/heads/build/install_latest.sh" | sudo CDN_URL="https://ghfast.top/" bash -s
+wget "https://ghfast.top/https://raw.githubusercontent.com/XDflight/bbr3-debs/refs/heads/build/install_latest.sh" && sudo CDN_URL="https://ghfast.top/" ./install_latest.sh
 ```
 You are good to go if every step completed without error.
 No post-installation configuration (except the mandatory reboot) is required.

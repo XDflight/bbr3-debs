@@ -13,11 +13,11 @@
 
 Google BBR v3 を統合して有効化した最新の Linux カーネルをインストールするには、以下のコマンドを実行してください:
 ```
-curl -sL "https://raw.githubusercontent.com/XDflight/bbr3-debs/refs/heads/build/install_latest.sh" | sudo bash -s
+wget "https://raw.githubusercontent.com/XDflight/bbr3-debs/refs/heads/build/install_latest.sh" && sudo ./install_latest.sh
 ```
 中国本土のユーザーは、以下のコマンドを実行してダウンロード速度を向上させることができます:
 ```
-curl -sL "https://ghfast.top/https://raw.githubusercontent.com/XDflight/bbr3-debs/refs/heads/build/install_latest.sh" | sudo CDN_URL="https://ghfast.top/" bash -s
+wget "https://ghfast.top/https://raw.githubusercontent.com/XDflight/bbr3-debs/refs/heads/build/install_latest.sh" && sudo CDN_URL="https://ghfast.top/" ./install_latest.sh
 ```
 すべてのステップがエラーなく完了した場合、準備完了です！
 必須の再起動を除いて、追加の設定は必要ありません。

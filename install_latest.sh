@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# This script should self-destruct
+rm -- "$0"
+
 COLOR_RED="\e[31m"
 COLOR_GREEN="\e[32m"
 COLOR_YELLOW="\e[33m"
