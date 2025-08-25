@@ -13,11 +13,11 @@
 
 要安装集成并启用 Google BBR v3 的最新 Linux 内核，只需运行以下命令：
 ```
-wget "https://raw.githubusercontent.com/XDflight/bbr3-debs/refs/heads/build/install_latest.sh" && sudo ./install_latest.sh
+wget "https://raw.githubusercontent.com/XDflight/bbr3-debs/refs/heads/build/install_latest.sh" && sudo bash install_latest.sh
 ```
 中国大陆用户可以运行以下命令以加快下载速度：
 ```
-wget "https://ghfast.top/https://raw.githubusercontent.com/XDflight/bbr3-debs/refs/heads/build/install_latest.sh" && sudo CDN_URL="https://ghfast.top/" ./install_latest.sh
+wget "https://ghfast.top/https://raw.githubusercontent.com/XDflight/bbr3-debs/refs/heads/build/install_latest.sh" && sudo CDN_URL="https://ghfast.top/" bash install_latest.sh
 ```
 如果每一步都顺利完成，那就大功告成啦！
 无需进行任何后续配置（除了必须的重启）。
