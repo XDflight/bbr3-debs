@@ -11738,7 +11738,7 @@ index 461a9ab540af..02ae796fa17e 100644
  		info->tcpi_options |= TCPI_OPT_SYN_DATA;
  	if (tp->tcp_usec_ts)
 diff --git a/net/ipv4/tcp_bbr.c b/net/ipv4/tcp_bbr.c
-index 760941e55153..1d1934912e4b 100644
+index 760941e55153..8add6cddf3ff 100644
 --- a/net/ipv4/tcp_bbr.c
 +++ b/net/ipv4/tcp_bbr.c
 @@ -1,18 +1,19 @@
@@ -12199,7 +12199,7 @@ index 760941e55153..1d1934912e4b 100644
 +{
 +	struct bbr *bbr = inet_csk_ca(sk);
 +	u32 segs, r;
-+	u64 bytes;
++	unsigned long bytes;
 +
 +	/* Budget a TSO/GSO burst size allowance based on bw (pacing_rate). */
 +	bytes = READ_ONCE(sk->sk_pacing_rate) >> READ_ONCE(sk->sk_pacing_shift);

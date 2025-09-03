@@ -63,9 +63,7 @@ jobs:
         if: ${{ matrix.branch != 'v3' }}
         run: |
           curl -LO "https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/build/patches/${{ matrix.branch }}.patch"
-          curl -LO "https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/build/patches/arch32.patch"
           git apply -3 ${{ matrix.branch }}.patch
-          patch -p1 < arch32.patch
 
       - name: "dependencies"
         run: |
