@@ -17,7 +17,9 @@ jobs:
     runs-on: ${{ (matrix.arch == 'amd64' || matrix.arch == 'i386') && 'ubuntu-latest' || 'ubuntu-22.04-arm' }}
     strategy:
       matrix: 
-        branch: ${{ fromJSON(github.event.inputs.branch && format('["{0}"]', github.event.inputs.branch) || '["linux-rolling-stable", "linux-rolling-lts", "linux-6.1.y"]') }}
+        branch: >-
+          ${{ fromJSON(github.event.inputs.branch && format('["{0}"]', github.event.inputs.branch) || 
+                       '["linux-rolling-stable", "linux-rolling-lts", "linux-6.1.y"]') }}
         arch: ["amd64", "i386", "arm64", "armhf", "riscv64"]
         
     steps:
@@ -94,21 +96,39 @@ jobs:
         run: |
           make ${{ env.MAKE_ENV }} olddefconfig
 
-      - name: "make"
+      - name: "tag"
         run: |
           KERNEL_VER=$(make kernelversion)
+          TAG_NAME=linux-$KERNEL_VER-bbr3-${{ matrix.arch }}
+          TAG_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" "https://api.github.com/repos/${{ github.repository }}/git/ref/tags/$TAG_NAME" | grep -q '^200$' && echo true || echo false)
           echo -e "KERNEL_VER=$KERNEL_VER" >> ${GITHUB_ENV}
-          make ${{ env.MAKE_ENV }} -j$(nproc) bindeb-pkg LOCALVERSION=-bbr3 KDEB_PKGVERSION=$KERNEL_VER-bbr3
+          echo -e "TAG_NAME=$TAG_NAME" >> ${GITHUB_ENV}
+          echo -e "TAG_EXISTS=$TAG_EXISTS" >> ${GITHUB_ENV}
+      
+      - name: "make"
+        if: ${{ env.TAG_EXISTS == 'false' }}
+        run: |
+          make ${{ env.MAKE_ENV }} -j$(nproc) bindeb-pkg LOCALVERSION=-bbr3 KDEB_PKGVERSION=${{ env.KERNEL_VER }}-bbr3
       
       - name: "release"
+        if: ${{ env.TAG_EXISTS == 'false' }}
         uses: softprops/action-gh-release@v2
         with:
-          draft: true
+          draft: ${{ matrix.arch == 'amd64' }}
+          prerelease: false
+          make_latest: false
           files: ../linux-*.deb
           target_commitish: ${{ matrix.branch == 'v3' && matrix.branch || 'build' }}
-          tag_name: linux-${{ env.KERNEL_VER }}-bbr3-${{ matrix.arch }}
+          tag_name: ${{ env.TAG_NAME }}
           name: "Linux ${{ env.KERNEL_VER }} BBR-v3 ${{ matrix.arch }}"
-          body: "**Target Architecture:** ${{ env.ARCH_DESC }}\n\nThis is the *latest ${{ env.BRANCH_DESC }} kernel* released on 20XX-XX-XX. See [this release](https://github.com/XDflight/bbr3-debs/releases/tag/linux-${{ env.KERNEL_VER }}-bbr3-amd64) for ${{ matrix.arch == 'amd64' && 'more information' || 'detailed release notes' }}."
           fail_on_unmatched_files: true
+          overwrite_files: true
           generate_release_notes: false
-          append_body: true
+          append_body: false
+          body: |-
+            **Target Architecture:** ${{ env.ARCH_DESC }}
+            
+            ${{ matrix.arch == 'amd64' && format('This is the *latest {0} kernel* released on 20XX-XX-XX.', env.BRANCH_DESC) || '' }}
+            ${{ format('See [this release](https://github.com/XDflight/bbr3-debs/releases/tag/linux-{0}-bbr3-amd64) for {1}.', 
+                       matrix.arch != 'amd64' && env.KERNEL_VER || 'X.X.X', 
+                       matrix.arch == 'amd64' && 'more information' || 'detailed release notes') }}
