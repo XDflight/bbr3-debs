@@ -5,8 +5,7 @@ on:
     inputs:
       branch:
         description: "Branch"
-        required: true
-        default: "v3"
+        required: false
 
   schedule:
     - cron: "21 07 * * 1"
@@ -18,7 +17,7 @@ jobs:
     runs-on: ${{ (matrix.arch == 'amd64' || matrix.arch == 'i386') && 'ubuntu-latest' || 'ubuntu-22.04-arm' }}
     strategy:
       matrix: 
-        branch: ["${{ github.event.inputs.branch || 'linux-rolling-stable' }}"]
+        branch: ${{ fromJSON(github.event.inputs.branch && format('["{0}"]', github.event.inputs.branch) || '["linux-rolling-stable", "linux-rolling-lts", "linux-6.1.y"]') }}
         arch: ["amd64", "i386", "arm64", "armhf", "riscv64"]
         
     steps:
@@ -36,20 +35,36 @@ jobs:
       - name: "env"
         run: |
           echo -e "DATE=$(date --rfc-3339=date)" >> ${GITHUB_ENV}
+          
           if [[ "${{ matrix.arch }}" == "amd64" ]]; then
             echo -e "MAKE_ENV=" >> ${GITHUB_ENV}
+            echo -e "ARCH_DESC=\`amd64\` / \`x86-64\`" >> ${GITHUB_ENV}
           fi
           if [[ "${{ matrix.arch }}" == "i386" ]]; then
             echo -e "MAKE_ENV=ARCH=i386 CROSS_COMPILE=i686-linux-gnu-" >> ${GITHUB_ENV}
+            echo -e "ARCH_DESC=\`i386\` / \`i686\` / \`ia32\` / \`x86\` / \`x86-32\`" >> ${GITHUB_ENV}
           fi
           if [[ "${{ matrix.arch }}" == "arm64" ]]; then
             echo -e "MAKE_ENV=" >> ${GITHUB_ENV}
+            echo -e "ARCH_DESC=\`arm64\` / \`aarch64\`" >> ${GITHUB_ENV}
           fi
           if [[ "${{ matrix.arch }}" == "armhf" ]]; then
             echo -e "MAKE_ENV=ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- KBUILD_DEBARCH=armhf" >> ${GITHUB_ENV}
+            echo -e "ARCH_DESC=\`armhf\` / \`armv7\` / \`arm\` / \`arm32\` / \`aarch32\` (hard-float)" >> ${GITHUB_ENV}
           fi
           if [[ "${{ matrix.arch }}" == "riscv64" ]]; then
             echo -e "MAKE_ENV=ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu-" >> ${GITHUB_ENV}
+            echo -e "ARCH_DESC=\`riscv64\`" >> ${GITHUB_ENV}
+          fi
+
+          if [[ "${{ matrix.branch }}" == "linux-rolling-stable" ]]; then
+            echo -e "BRANCH_DESC=stable" >> ${GITHUB_ENV}
+          elif [[ "${{ matrix.branch }}" == "linux-rolling-lts" ]]; then
+            echo -e "BRANCH_DESC=LTS" >> ${GITHUB_ENV}
+          elif [[ "${{ matrix.branch }}" == "linux-6.1.y" ]]; then
+            echo -e "BRANCH_DESC=6.1 LTS" >> ${GITHUB_ENV}
+          else
+            echo -e "BRANCH_DESC=${{ matrix.branch }}" >> ${GITHUB_ENV}
           fi
       
       - name: "checkout"
@@ -81,7 +96,9 @@ jobs:
 
       - name: "make"
         run: |
-          make ${{ env.MAKE_ENV }} -j$(nproc) bindeb-pkg LOCALVERSION=-bbr3 KDEB_PKGVERSION=${{ env.DATE }}
+          KERNEL_VER=$(make kernelversion)
+          echo -e "KERNEL_VER=$KERNEL_VER" >> ${GITHUB_ENV}
+          make ${{ env.MAKE_ENV }} -j$(nproc) bindeb-pkg LOCALVERSION=-bbr3 KDEB_PKGVERSION=$KERNEL_VER-bbr3
       
       - name: "release"
         uses: softprops/action-gh-release@v2
@@ -89,8 +106,9 @@ jobs:
           draft: true
           files: ../linux-*.deb
           target_commitish: ${{ matrix.branch == 'v3' && matrix.branch || 'build' }}
-          tag_name: ${{ matrix.branch }}-bbr3-${{ matrix.arch }}_${{ env.DATE }}
-          name: "${{ matrix.branch }} BBR-v3 ${{ matrix.arch }}"
+          tag_name: linux-${{ env.KERNEL_VER }}-bbr3-${{ matrix.arch }}
+          name: "Linux ${{ env.KERNEL_VER }} BBR-v3 ${{ matrix.arch }}"
+          body: "**Target Architecture:** ${{ env.ARCH_DESC }}\n\nThis is the *latest ${{ env.BRANCH_DESC }} kernel* released on 20XX-XX-XX. See [this release](https://github.com/XDflight/bbr3-debs/releases/tag/linux-${{ env.KERNEL_VER }}-bbr3-amd64) for ${{ matrix.arch == 'amd64' && 'more information' || 'detailed release notes' }}."
           fail_on_unmatched_files: true
           generate_release_notes: false
           append_body: true
