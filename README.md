@@ -28,6 +28,7 @@ The script will automatically help you repair your kernel and/or sysctl settings
 
 The command can also be used to update the kernel.
 It will check for kernel update every time it runs, and will update the kernel if a newer version is available.
+The script will also help you remove old, unused kernels from your system, so you don't have to worry about old kernels taking up too much space overtime.
 
 **Currently supported CPU architectures:**
 - `amd64` / `x86-64`

@@ -42,6 +42,21 @@ if ! command -v jq &> /dev/null; then
     fi
 fi
 
+# Purge old, unused kernels
+echo -e "${COLOR_CYAN}Purging old, unused kernels...${COLOR_END}"
+apt-get autoremove -y
+if [ $? -ne 0 ]; then
+    echo -e "${COLOR_YELLOW}Error purging old kernels with apt. Please remember to remove them manually later.${COLOR_END}"
+fi
+OLD_BBR3_HEADERS=$(sed '1d' <<< $(dpkg --list 'linux-headers-*' | grep -o 'linux-\S*-bbr3' | sort -rV))
+OLD_BBR3_IMAGES=$(sed '1d' <<< $(dpkg --list 'linux-image-*' | grep -o 'linux-\S*-bbr3' | sort -rV))
+for PKG in "$OLD_BBR3_HEADERS $OLD_BBR3_IMAGES"; do
+    apt-get purge $PKG -y
+    if [ $? -ne 0 ]; then
+        echo -e "${COLOR_YELLOW}Error purging old BRR-v3 kernel ($PKG) with apt. Please remember to remove it manually later.${COLOR_END}"
+    fi
+done
+
 # Get the current kernel version and architecture
 ARCH=$(dpkg --print-architecture)
 CURRENT_VERSION="linux-$(uname -r)-$ARCH"

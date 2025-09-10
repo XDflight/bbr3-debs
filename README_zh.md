@@ -28,6 +28,7 @@ wget "https://ghfast.top/https://raw.githubusercontent.com/XDflight/bbr3-debs/re
 
 上述命令也可用于更新内核。
 每次运行时，它都会检查内核更新，并在有新版本时自动更新内核。
+脚本还会帮助你删除系统中旧的、未使用的内核，这样你就不必担心旧内核随着时间占用过多磁盘空间。
 
 **当前支持的 CPU 架构：**
 - `amd64` / `x86-64`
