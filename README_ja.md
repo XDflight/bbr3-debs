@@ -1,5 +1,7 @@
 # 最新の Linux カーネル、Google BBR v3 を統合
 
+![Build status](https://github.com/XDflight/bbr3-debs/actions/workflows/build.yml/badge.svg)
+
 **言語を選択:** &nbsp; [English](README.md) &nbsp; [中文](README_zh.md) &nbsp; [日本語](#)
 
 > **簡単なまとめ:** BBR は高速・長距離リンクで大幅なスループット向上を実現します。BBR のスループットは、現在最も優れた損失ベースの輻輳制御である CUBIC より 2700 倍も高くなります（CUBIC は約 3.3 Mbps、BBR は 9100 Mbps を超えます）。また、BBR はインターネットに接続するラストマイルネットワークでの遅延を大幅に削減します。BBR はキューイング遅延を CUBIC の 1/25 に抑えることができます [(BBR v1 公式ブログ 2017)](https://cloud.google.com/blog/products/networking/tcp-bbr-congestion-control-comes-to-gcp-your-internet-just-got-faster)。BBR v3 は BBR v1 の改良版で、まだカーネルに統合されていません。
