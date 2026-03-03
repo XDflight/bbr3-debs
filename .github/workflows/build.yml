@@ -116,7 +116,7 @@ jobs:
         with:
           draft: ${{ matrix.arch == 'amd64' }}
           prerelease: false
-          make_latest: false
+          make_latest: "false"
           files: ../linux-*.deb
           target_commitish: ${{ matrix.branch == 'v3' && matrix.branch || 'build' }}
           tag_name: ${{ env.TAG_NAME }}
