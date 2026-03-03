@@ -1,6 +1,6 @@
 # 最新 Linux 内核，集成 Google BBR v3
 
-![Build status](https://github.com/XDflight/bbr3-debs/actions/workflows/build.yml/badge.svg)
+![build status](https://github.com/XDflight/bbr3-debs/actions/workflows/build.yml/badge.svg)
 
 **选择语言：** [English](README.md) &nbsp; [中文](#) &nbsp; [日本語](README_ja.md)
 

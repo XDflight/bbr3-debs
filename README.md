@@ -1,6 +1,6 @@
 # Latest Linux kernels merged with Google BBR v3
 
-![Build status](https://github.com/XDflight/bbr3-debs/actions/workflows/build.yml/badge.svg)
+![build status](https://github.com/XDflight/bbr3-debs/actions/workflows/build.yml/badge.svg)
 
 **Choose Language:** &nbsp; [English](#) &nbsp; [中文](README_zh.md) &nbsp; [日本語](README_ja.md)
 

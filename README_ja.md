@@ -1,6 +1,6 @@
 # 最新の Linux カーネル、Google BBR v3 を統合
 
-![Build status](https://github.com/XDflight/bbr3-debs/actions/workflows/build.yml/badge.svg)
+![build status](https://github.com/XDflight/bbr3-debs/actions/workflows/build.yml/badge.svg)
 
 **言語を選択:** &nbsp; [English](README.md) &nbsp; [中文](README_zh.md) &nbsp; [日本語](#)
 
