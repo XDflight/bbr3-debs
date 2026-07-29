@@ -131,4 +131,4 @@ jobs:
             ${{ matrix.arch == 'amd64' && format('This is the *latest {0} kernel* released on 20XX-XX-XX.', env.BRANCH_DESC) || '' }}
             ${{ format('See [this release](https://github.com/XDflight/bbr3-debs/releases/tag/linux-{0}-bbr3-amd64) for {1}.', 
                        matrix.arch != 'amd64' && env.KERNEL_VER || 'X.X.X', 
-                       matrix.arch == 'amd64' && 'more information' || 'detailed release notes') }}
+                       matrix.arch == 'amd64' && 'modifications made in a previous version' || 'detailed release notes') }}
