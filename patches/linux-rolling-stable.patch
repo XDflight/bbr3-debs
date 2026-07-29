@@ -11265,7 +11265,7 @@ index 433c2df23076..ce51146bd6af 100644
  
  #define ICSK_TIME_RETRANS	1	/* Retransmit timer */
 diff --git a/include/net/tcp.h b/include/net/tcp.h
-index 98848db62894..21f039edce16 100644
+index 607298501e12..3c0fc9f8a6b4 100644
 --- a/include/net/tcp.h
 +++ b/include/net/tcp.h
 @@ -429,6 +429,8 @@ static inline void tcp_dec_quickack_mode(struct sock *sk)
@@ -11735,13 +11735,12 @@ index 389a7cc17110..31e13af6f955 100644
  		info->tcpi_options |= TCPI_OPT_SYN_DATA;
  	if (tp->tcp_usec_ts)
 diff --git a/net/ipv4/tcp_bbr.c b/net/ipv4/tcp_bbr.c
-index aec7805b1d37..5da5b77e2bad 100644
+index 82378a2bfd1e..81454b11fb1b 100644
 --- a/net/ipv4/tcp_bbr.c
 +++ b/net/ipv4/tcp_bbr.c
 @@ -1,19 +1,20 @@
- // SPDX-License-Identifier: GPL-2.0
--/* Bottleneck Bandwidth and RTT (BBR) congestion control
-+/* BBR (Bottleneck Bandwidth and RTT) congestion control
+ // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+ /* Bottleneck Bandwidth and RTT (BBR) congestion control
   *
 - * BBR congestion control computes the sending rate based on the delivery
 - * rate (throughput) estimated from ACKs. In a nutshell:
@@ -15808,7 +15807,7 @@ index e6092c3ac840..0ce3addd4047 100644
  		const struct tcp_congestion_ops *ca;
  
 diff --git a/net/ipv4/tcp_output.c b/net/ipv4/tcp_output.c
-index 6e4bb411dc04..bc304145e519 100644
+index a88c7eb72b96..5f8e25530eeb 100644
 --- a/net/ipv4/tcp_output.c
 +++ b/net/ipv4/tcp_output.c
 @@ -371,7 +371,8 @@ static void tcp_ecn_send(struct sock *sk, struct sk_buff *skb,
