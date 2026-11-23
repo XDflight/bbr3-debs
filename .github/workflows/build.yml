@@ -15,6 +15,8 @@ jobs:
   build:
     name: ${{ matrix.branch }}_${{ matrix.arch }}
     runs-on: ${{ (matrix.arch == 'amd64' || matrix.arch == 'i386') && 'ubuntu-latest' || 'ubuntu-22.04-arm' }}
+    permissions:
+      contents: write
     strategy:
       matrix: 
         branch: >-
@@ -105,6 +107,77 @@ jobs:
           echo -e "TAG_NAME=$TAG_NAME" >> ${GITHUB_ENV}
           echo -e "TAG_EXISTS=$TAG_EXISTS" >> ${GITHUB_ENV}
       
+      - name: "release notes"
+        if: ${{ env.TAG_EXISTS == 'false' }}
+        id: release_notes
+        uses: actions/github-script@v7
+        with:
+          script: |
+            if (!process.env.TAG_NAME.endsWith('-amd64')) {
+              core.setOutput('body', [
+                `**Target Architecture:** ${process.env.ARCH_DESC}`,
+                '',
+                `See [this release](https://github.com/${context.repo.owner}/${context.repo.repo}/releases/tag/linux-${process.env.KERNEL_VER}-bbr3-amd64) for detailed release notes.`
+              ].join('\n'));
+              return;
+            }
+            const { KERNEL_VER: version, BRANCH_DESC: branch, ARCH_DESC: arch } = process.env;
+            if (!/^\d+\.\d+(?:\.\d+)?$/.test(version)) {
+              throw new Error(`Cannot determine an upstream release date for ${version}`);
+            }
+            const changelogUrl = `https://cdn.kernel.org/pub/linux/kernel/v${version.split('.')[0]}.x/ChangeLog-${version}`;
+            let changelog;
+            for (let attempt = 1; attempt <= 3; attempt++) {
+              try {
+                const response = await fetch(changelogUrl, { signal: AbortSignal.timeout(60000) });
+                if (!response.ok) throw new Error(`HTTP ${response.status} fetching ${changelogUrl}`);
+                changelog = await response.text();
+                break;
+              } catch (error) {
+                if (attempt === 3) throw error;
+                core.warning(`Changelog fetch failed; retrying: ${error.message}`);
+              }
+            }
+            // Only inspect the release commit, never an older commit's date.
+            const firstCommit = changelog.split(/^commit /m)[1];
+            if (!firstCommit || !firstCommit.split('\n').some(line => line.trim() === `Linux ${version}`)) {
+              throw new Error(`Changelog does not start with the Linux ${version} release commit`);
+            }
+            const dateLine = firstCommit.match(/^Date:\s+(.+)$/m)?.[1];
+            // Preserve the calendar date in the author's timezone, even near midnight.
+            const date = dateLine && new Date(dateLine.replace(/ [+-]\d{4}$/, ' +0000'));
+            if (!date || Number.isNaN(date.getTime())) throw new Error('Missing or invalid release date');
+            const releaseDate = date.toISOString().slice(0, 10);
+            
+            const releases = await github.paginate(github.rest.repos.listReleases, {
+              ...context.repo, per_page: 100
+            });
+            const compare = (a, b) => {
+              const left = a.split('.').map(Number);
+              const right = b.split('.').map(Number);
+              for (let i = 0; i < 3; i++) {
+                const difference = (left[i] || 0) - (right[i] || 0);
+                if (difference) return difference;
+              }
+              return 0;
+            };
+            const previous = releases
+              .filter(release => !release.draft && !release.prerelease)
+              .map(release => ({ release, version: release.tag_name.match(/^linux-(\d+\.\d+(?:\.\d+)?)-bbr3-amd64$/)?.[1] }))
+              .filter(item => item.version && compare(item.version, version) < 0 &&
+                item.release.body?.includes(`*latest ${branch} kernel*`))
+              .sort((a, b) => compare(b.version, a.version))[0]?.release;
+            const lines = [
+              `**Target Architecture:** ${arch}`,
+              '',
+              `This is the *latest ${branch} kernel* released on ${releaseDate}.`,
+              `[Upstream changelog](${changelogUrl}).`
+            ];
+            if (previous) {
+              lines.push(`See [this release](${previous.html_url}) for modifications made in a previous version.`);
+            }
+            core.setOutput('body', lines.join('\n'));
+
       - name: "make"
         if: ${{ env.TAG_EXISTS == 'false' }}
         run: |
@@ -114,7 +187,7 @@ jobs:
         if: ${{ env.TAG_EXISTS == 'false' }}
         uses: softprops/action-gh-release@v2
         with:
-          draft: ${{ matrix.arch == 'amd64' }}
+          draft: false
           prerelease: false
           make_latest: "false"
           files: ../linux-*.deb
@@ -125,10 +198,4 @@ jobs:
           overwrite_files: true
           generate_release_notes: false
           append_body: false
-          body: |-
-            **Target Architecture:** ${{ env.ARCH_DESC }}
-            
-            ${{ matrix.arch == 'amd64' && format('This is the *latest {0} kernel* released on 20XX-XX-XX.', env.BRANCH_DESC) || '' }}
-            ${{ format('See [this release](https://github.com/XDflight/bbr3-debs/releases/tag/linux-{0}-bbr3-amd64) for {1}.', 
-                       matrix.arch != 'amd64' && env.KERNEL_VER || 'X.X.X', 
-                       matrix.arch == 'amd64' && 'modifications made in a previous version' || 'detailed release notes') }}
+          body: ${{ steps.release_notes.outputs.body }}
